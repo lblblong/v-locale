@@ -1,0 +1,58 @@
+{
+  "name": "v-locale",
+  "version": "0.1.0",
+  "description": "A lightweight, type-safe Vue 3 internationalization (i18n) solution with reactive language switching and localStorage support",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.en.md"
+  ],
+  "keywords": [
+    "vue",
+    "vue3",
+    "i18n",
+    "internationalization",
+    "locale",
+    "language",
+    "typescript",
+    "reactive"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lblblong/v-locale.git"
+  },
+  "homepage": "https://github.com/lblblong/v-locale#readme",
+  "bugs": {
+    "url": "https://github.com/lblblong/v-locale/issues"
+  },
+  "author": "lblblong <1162275271@qq.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "tsc && vite build -w",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "prepublishOnly": "tsc && vite build"
+  },
+  "peerDependencies": {
+    "vue": ">=3.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.8.1",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.7",
+    "vite-plugin-dts": "^4.5.4",
+    "vue": "^3.5.21",
+    "vue-tsc": "^3.0.7"
+  }
+}

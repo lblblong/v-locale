@@ -1,0 +1,29 @@
+# Source files
+src/
+public/
+dist/
+
+# Build tools
+vite.config.ts
+tsconfig*.json
+
+# Development files
+*.log
+node_modules/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Package managers
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Development only
+index.html

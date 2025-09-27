@@ -1,0 +1,2 @@
+export { createLang } from './createLang';
+
