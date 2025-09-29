@@ -55,7 +55,7 @@ const langs = [
         <p class="code-like">lang.$.x({ chs: '…', en: '…' })</p>
         <p class="value large">
           {{
-            lang.$.x({
+            lang.$.t({
               chs: '中午好，你吃了吗？',
               en: 'Good afternoon, have you eaten?',
               cht: '中午好，你吃了嗎？'

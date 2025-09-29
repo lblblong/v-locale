@@ -10,7 +10,7 @@ interface CreateLangOptions {
 interface Lang<Langs extends string> {
   readonly lang: Langs
   set: (val: Langs, persist?: boolean) => void
-  x: <V>(opts: { [K in Langs]: V }) => V
+  t: <V>(opts: { [K in Langs]: V }) => V
 }
 
 export function createLang<T extends object, L extends string>(
@@ -41,7 +41,7 @@ export function createLang<T extends object, L extends string>(
         localStorage.setItem(storageKey, String(val))
       }
     },
-    x: <V>(opts: { [K in L]: V }): V => {
+    t: <V>(opts: { [K in L]: V }): V => {
       return opts[lang.value]
     },
   }

@@ -164,18 +164,18 @@ console.log(lang.helloTo('Vue')) // 函数调用
 // 在模板中使用组件：<component :is="lang.helloUI" />
 ```
 
-### 使用 `x` 函数进行临时多语言映射
+### 使用 `t` 函数进行临时多语言映射
 
 ```typescript
-// x 函数用于一次性的多语言映射，无需预定义
-const message = lang.$.x({
+// t 函数用于一次性的多语言映射，无需预定义
+const message = lang.$.t({
   chs: '中午好，你吃了吗？',
   en: 'Good afternoon, have you eaten?',
   cht: '中午好，你吃了嗎？',
 })
 
 // 根据当前语言返回对应的值
-console.log(message) // 根据 lang.lang 返回对应语言的文本
+console.log(message) // 根据 lang.$.lang 返回对应语言的文本
 ```
 
 ## 📚 API 参考
@@ -200,7 +200,7 @@ console.log(message) // 根据 lang.lang 返回对应语言的文本
   - `set(key, persist?)` - 设置当前语言
     - `key` - 要设置的语言键
     - `persist` - 是否持久化到 localStorage，默认为 `true`
-  - `x(options)` - 根据当前语言动态选择值
+  - `t(options)` - 根据当前语言动态选择值
     - `options` - 包含所有语言键对应值的对象
     - 返回值 - 根据当前语言返回对应的值
 - `...langData` - 当前语言的所有数据属性（通过 Proxy 动态代理访问）
@@ -287,7 +287,7 @@ console.log(lang.formatPrice(99.99)) // "¥99.99"
 
 ```typescript
 // 临时切换语言，不保存到 localStorage
-lang.set('en', false)
+lang.$.set('en', false)
 
 // 刷新页面后会恢复之前保存的语言
 ```
