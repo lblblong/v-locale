@@ -64,7 +64,7 @@ const lang = createLang(langData, { default: 'chs' })
 // 使用语言数据
 console.log(lang.hello) // '你好'
 console.log(lang.country.cn) // '中国'
-console.log(lang.lang) // 'chs' (当前语言键)
+console.log(lang.$.lang) // 'chs' (当前语言键)
 
 // 切换语言
 lang.set('en')
