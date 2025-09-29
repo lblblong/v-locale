@@ -67,7 +67,7 @@ console.log(lang.country.cn) // '中国'
 console.log(lang.$.lang) // 'chs' (当前语言键)
 
 // 切换语言
-lang.set('en')
+lang.$.set('en')
 console.log(lang.hello) // 'Hello'
 console.log(lang.country.cn) // 'China'
 ```
