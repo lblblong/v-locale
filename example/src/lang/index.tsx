@@ -1,8 +1,8 @@
 import { createLang } from 'v-locale'
 import Hello from '../components/Hello.vue'
-import { cht } from './cht'
 import { en } from './en'
 import { getLocale } from './getLocale'
+import { ja } from './ja'
 
 export const chs = {
   country: {
@@ -20,7 +20,7 @@ export const lang = createLang(
   {
     chs,
     en,
-    cht,
+    ja,
   },
   { default: getLocale() }
 )

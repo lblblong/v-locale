@@ -5,7 +5,7 @@ import { lang } from './lang'
 const langs = [
   { key: 'en', label: 'English' },
   { key: 'chs', label: '简体中文' },
-  { key: 'cht', label: '繁體中文' },
+  { key: 'ja', label: '日語' },
 ] as const
 </script>
 
@@ -58,7 +58,7 @@ const langs = [
             lang.$.t({
               chs: '中午好，你吃了吗？',
               en: 'Good afternoon, have you eaten?',
-              cht: '中午好，你吃了嗎？'
+              ja: 'こんにちは、ご飯は食べましたか？',
             })
           }}
         </p>
