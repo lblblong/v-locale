@@ -1,4 +1,4 @@
-import { createLang } from 'v-locale'
+import { createLang } from 'vue-locale'
 import Hello from '../components/Hello.vue'
 import { en } from './en'
 import { getLocale } from './getLocale'

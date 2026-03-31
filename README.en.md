@@ -1,10 +1,10 @@
-# v-locale
+# vue-locale
 
 <p align="center">
-  <img src="https://img.shields.io/npm/v/v-locale" alt="NPM Version">
-  <img src="https://img.shields.io/npm/dm/v-locale" alt="NPM Downloads">
-  <img src="https://img.shields.io/github/license/your-username/v-locale" alt="License">
-  <img src="https://img.shields.io/bundlephobia/minzip/v-locale" alt="Bundle Size">
+  <img src="https://img.shields.io/npm/v/vue-locale" alt="NPM Version">
+  <img src="https://img.shields.io/npm/dm/vue-locale" alt="NPM Downloads">
+  <img src="https://img.shields.io/github/license/your-username/vue-locale" alt="License">
+  <img src="https://img.shields.io/bundlephobia/minzip/vue-locale" alt="Bundle Size">
 </p>
 
 A lightweight, type-safe Vue 3 internationalization (i18n) solution with reactive language switching and localStorage support.
@@ -24,13 +24,13 @@ English | [中文](README.md)
 
 ```bash
 # npm
-npm install v-locale
+npm install vue-locale
 
 # yarn
-yarn add v-locale
+yarn add vue-locale
 
 # pnpm
-pnpm add v-locale
+pnpm add vue-locale
 ```
 
 ## 🚀 Quick Start
@@ -38,7 +38,7 @@ pnpm add v-locale
 ### Basic Usage
 
 ```typescript
-import { createLang } from 'v-locale'
+import { createLang } from 'vue-locale'
 
 // Define your language data
 const langData = {
@@ -93,7 +93,7 @@ console.log(lang.lang)  // Outputs current language key
 </template>
 
 <script setup>
-import { createLang } from 'v-locale'
+import { createLang } from 'vue-locale'
 
 const langData = {
   en: { greeting: 'Welcome', hello: 'Hello', world: 'World' },
@@ -139,7 +139,7 @@ Creates a language manager instance.
 - `langs` - Language data object where keys are language identifiers and values are data objects for that language
 - `options` - Optional configuration
   - `default` - Default language key, uses the first language if not specified
-  - `storageKey` - localStorage key name, defaults to `'v-locale'`
+  - `storageKey` - localStorage key name, defaults to `'vue-locale'`
 
 #### Returns
 
@@ -276,7 +276,7 @@ export default {
 // lang/index.ts
 import en from './en'
 import zh from './zh'
-import { createLang } from 'v-locale'
+import { createLang } from 'vue-locale'
 
 export const lang = createLang({ en, zh }, {
   default: 'en',

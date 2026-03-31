@@ -1,10 +1,10 @@
-# v-locale
+# vue-locale
 
 <p align="center">
-  <img src="https://img.shields.io/npm/v/v-locale" alt="NPM Version">
-  <img src="https://img.shields.io/npm/dm/v-locale" alt="NPM Downloads">
-  <img src="https://img.shields.io/github/license/lblblong/v-locale" alt="License">
-  <img src="https://img.shields.io/bundlephobia/minzip/v-locale" alt="Bundle Size">
+  <img src="https://img.shields.io/npm/v/vue-locale" alt="NPM Version">
+  <img src="https://img.shields.io/npm/dm/vue-locale" alt="NPM Downloads">
+  <img src="https://img.shields.io/github/license/lblblong/vue-locale" alt="License">
+  <img src="https://img.shields.io/bundlephobia/minzip/vue-locale" alt="Bundle Size">
 </p>
 
 一个轻量级、类型安全的 Vue 3 国际化（i18n）解决方案，提供响应式的语言切换和本地存储支持。支持任意数据类型，包括字符串、对象、组件和函数。
@@ -24,13 +24,13 @@
 
 ```bash
 # npm
-npm install v-locale
+npm install vue-locale
 
 # yarn
-yarn add v-locale
+yarn add vue-locale
 
 # pnpm
-pnpm add v-locale
+pnpm add vue-locale
 ```
 
 ## 🚀 快速开始
@@ -38,7 +38,7 @@ pnpm add v-locale
 ### 基础用法
 
 ```typescript
-import { createLang } from 'v-locale'
+import { createLang } from 'vue-locale'
 
 // 定义语言数据（支持任意类型）
 const langData = {
@@ -99,7 +99,7 @@ console.log(lang.country.cn) // 'China'
 </template>
 
 <script setup lang="ts">
-import { createLang } from 'v-locale'
+import { createLang } from 'vue-locale'
 
 const langData = {
   chs: {
@@ -129,7 +129,7 @@ const langs = [
 ### 支持多种数据类型
 
 ```typescript
-import { createLang } from 'v-locale'
+import { createLang } from 'vue-locale'
 import HelloComponent from './components/Hello.vue'
 
 const lang = createLang({
@@ -189,7 +189,7 @@ console.log(message) // 根据 lang.$.lang 返回对应语言的文本
 - `langs` - 语言数据对象，键为语言标识，值为该语言的数据对象（支持任意类型）
 - `options` - 可选配置项
   - `default` - 默认语言键，如果未指定则使用第一个语言
-  - `storageKey` - localStorage 存储键名，默认为 `'v-locale'`
+  - `storageKey` - localStorage 存储键名，默认为 `'vue-locale'`
 
 #### 返回值
 
@@ -321,7 +321,7 @@ export const chs = {
   },
   pages: {
     home: {
-      title: '欢迎使用 v-locale',
+      title: '欢迎使用 vue-locale',
       subtitle: '轻量级 Vue 3 国际化解决方案',
     },
   },
@@ -348,7 +348,7 @@ export const en: ILang = {
   },
   pages: {
     home: {
-      title: 'Welcome to v-locale',
+      title: 'Welcome to vue-locale',
       subtitle: 'Lightweight Vue 3 i18n Solution',
     },
   },
@@ -357,7 +357,7 @@ export const en: ILang = {
 
 ```typescript
 // lang/index.ts
-import { createLang } from 'v-locale'
+import { createLang } from 'vue-locale'
 import { chs } from './chs'
 import { en } from './en'
 

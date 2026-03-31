@@ -1,5 +1,5 @@
 {
-  "name": "v-locale",
+  "name": "vue-locale",
   "version": "0.1.0",
   "description": "A lightweight, type-safe Vue 3 internationalization (i18n) solution with reactive language switching and localStorage support",
   "type": "module",
@@ -30,11 +30,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/lblblong/v-locale.git"
+    "url": "https://github.com/lblblong/vue-locale.git"
   },
-  "homepage": "https://github.com/lblblong/v-locale#readme",
+  "homepage": "https://github.com/lblblong/vue-locale#readme",
   "bugs": {
-    "url": "https://github.com/lblblong/v-locale/issues"
+    "url": "https://github.com/lblblong/vue-locale/issues"
   },
   "author": "lblblong <1162275271@qq.com>",
   "license": "MIT",
