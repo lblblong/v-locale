@@ -2,6 +2,9 @@ import { defineConfig } from 'tsdown'
 
 export default defineConfig({
   entry: ['src/index.ts'],
+  deps: {
+    neverBundle: ['vue'],
+  },
   format: ['esm'],
   dts: true,
   sourcemap: true,
