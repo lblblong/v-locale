@@ -23,7 +23,7 @@ importers:
 
   example:
     dependencies:
-      vue-locale:
+      vue-localeflow:
         specifier: workspace:*
         version: link:..
       vue:

@@ -1,10 +1,10 @@
-# vue-locale
+# vue-localeflow
 
 <p align="center">
-  <img src="https://img.shields.io/npm/v/vue-locale" alt="NPM Version">
-  <img src="https://img.shields.io/npm/dm/vue-locale" alt="NPM Downloads">
-  <img src="https://img.shields.io/github/license/your-username/vue-locale" alt="License">
-  <img src="https://img.shields.io/bundlephobia/minzip/vue-locale" alt="Bundle Size">
+  <img src="https://img.shields.io/npm/v/vue-localeflow" alt="NPM Version">
+  <img src="https://img.shields.io/npm/dm/vue-localeflow" alt="NPM Downloads">
+  <img src="https://img.shields.io/github/license/your-username/vue-localeflow" alt="License">
+  <img src="https://img.shields.io/bundlephobia/minzip/vue-localeflow" alt="Bundle Size">
 </p>
 
 A lightweight, type-safe Vue 3 internationalization (i18n) solution with reactive language switching and localStorage support.
@@ -24,13 +24,13 @@ English | [中文](README.md)
 
 ```bash
 # npm
-npm install vue-locale
+npm install vue-localeflow
 
 # yarn
-yarn add vue-locale
+yarn add vue-localeflow
 
 # pnpm
-pnpm add vue-locale
+pnpm add vue-localeflow
 ```
 
 ## 🚀 Quick Start
@@ -38,7 +38,7 @@ pnpm add vue-locale
 ### Basic Usage
 
 ```typescript
-import { createLang } from 'vue-locale'
+import { createLang } from 'vue-localeflow'
 
 // Define your language data
 const langData = {
@@ -93,7 +93,7 @@ console.log(lang.lang)  // Outputs current language key
 </template>
 
 <script setup>
-import { createLang } from 'vue-locale'
+import { createLang } from 'vue-localeflow'
 
 const langData = {
   en: { greeting: 'Welcome', hello: 'Hello', world: 'World' },
@@ -139,7 +139,7 @@ Creates a language manager instance.
 - `langs` - Language data object where keys are language identifiers and values are data objects for that language
 - `options` - Optional configuration
   - `default` - Default language key, uses the first language if not specified
-  - `storageKey` - localStorage key name, defaults to `'vue-locale'`
+  - `storageKey` - localStorage key name, defaults to `'vue-localeflow'`
 
 #### Returns
 
@@ -276,7 +276,7 @@ export default {
 // lang/index.ts
 import en from './en'
 import zh from './zh'
-import { createLang } from 'vue-locale'
+import { createLang } from 'vue-localeflow'
 
 export const lang = createLang({ en, zh }, {
   default: 'en',

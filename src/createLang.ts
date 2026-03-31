@@ -7,7 +7,7 @@ import { logger } from './utils/logger'
  * Options for creating a multi-language configuration
  */
 interface CreateLangOptions {
-  /** localStorage key, defaults to 'vue-locale' */
+  /** localStorage key, defaults to 'vue-localeflow' */
   storageKey?: string
   /** Default language key, defaults to the first key of langs */
   default?: string
@@ -43,7 +43,7 @@ interface Core<Langs extends string> {
  *
  * @param langs - Multi-language data object, where keys are language identifiers and values are the corresponding language data
  * @param options - Configuration options
- * @param options.storageKey - localStorage key name, defaults to 'vue-locale'
+ * @param options.storageKey - localStorage key name, defaults to 'vue-localeflow'
  * @param options.default - Default language key, defaults to the first key of langs
  *
  * @returns Returns a read-only proxy object containing:
@@ -72,19 +72,19 @@ export function createLang<T extends object, L extends string>(
 ) {
   // Validate langs is not empty
   if (!langs || typeof langs !== 'object') {
-    throw new Error('[vue-locale] langs must be a non-empty object')
+    throw new Error('[vue-localeflow] langs must be a non-empty object')
   }
 
   const langKeys = Object.keys(langs) as L[]
 
   if (langKeys.length === 0) {
-    throw new Error('[vue-locale] langs must contain at least one language')
+    throw new Error('[vue-localeflow] langs must contain at least one language')
   }
 
   // Use Set for O(1) lookup performance
   const langKeysSet = new Set<L>(langKeys)
 
-  const storageKey = options.storageKey || 'vue-locale'
+  const storageKey = options.storageKey || 'vue-localeflow'
 
   const getInitialLang = (): L => {
     if (isBrowser) {

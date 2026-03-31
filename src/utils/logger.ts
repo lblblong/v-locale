@@ -1,9 +1,9 @@
 export const logger = {
   warn: (...message: any[]) => {
-    console.warn('[vue-locale]', ...message)
+    console.warn('[vue-localeflow]', ...message)
   },
   error: (...message: any[]) => {
-    console.error('[vue-locale]', ...message)
+    console.error('[vue-localeflow]', ...message)
   },
 }
 
