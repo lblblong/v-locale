@@ -6,11 +6,11 @@ import { logger } from './utils/logger'
 /**
  * Options for creating a multi-language configuration
  */
-interface CreateLangOptions {
+interface CreateLangOptions<Langs extends string = string> {
   /** localStorage key, defaults to 'vue-localeflow' */
   storageKey?: string
   /** Default language key, defaults to the first key of langs */
-  default?: string
+  default?: Langs
 }
 
 /**
@@ -29,10 +29,10 @@ interface Core<Langs extends string> {
   /**
    * Get the value corresponding to the current language
    * @template V - Return value type
-   * @param opts - Object containing all language keys and their corresponding values
+   * @param opts - Object containing language keys and their corresponding values
    * @returns The value corresponding to the current language
    */
-  t: <V>(opts: { [K in Langs]: V }) => V
+  t: <V>(opts: Partial<Record<Langs, V>>) => V
 }
 
 /**
@@ -68,7 +68,7 @@ interface Core<Langs extends string> {
  */
 export function createLang<T extends object, L extends string>(
   langs: Record<L, T>,
-  options: CreateLangOptions = {}
+  options: CreateLangOptions<L> = {}
 ) {
   // Validate langs is not empty
   if (!langs || typeof langs !== 'object') {
@@ -111,6 +111,29 @@ export function createLang<T extends object, L extends string>(
   const initialLang = getInitialLang()
   const lang = ref(initialLang) as import('vue').Ref<L>
 
+  const resolveTranslation = <V>(opts: Partial<Record<L, V>>): V => {
+    const currentValue = opts[lang.value]
+    if (currentValue !== undefined) {
+      return currentValue
+    }
+
+    if (options.default) {
+      const defaultValue = opts[options.default as L]
+      if (defaultValue !== undefined) {
+        return defaultValue
+      }
+    }
+
+    for (const key of langKeys) {
+      const fallbackValue = opts[key]
+      if (fallbackValue !== undefined) {
+        return fallbackValue
+      }
+    }
+
+    return undefined as V
+  }
+
   const $ = {
     get lang(): L {
       return lang.value
@@ -126,8 +149,8 @@ export function createLang<T extends object, L extends string>(
         safeSetStorage(storageKey, String(val))
       }
     },
-    t: <V>(opts: { [K in L]: V }): V => {
-      return opts[lang.value]
+    t: <V>(opts: Partial<Record<L, V>>): V => {
+      return resolveTranslation(opts)
     },
   }
 

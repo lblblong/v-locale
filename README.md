@@ -188,7 +188,7 @@ console.log(message) // 根据 lang.$.lang 返回对应语言的文本
 
 - `langs` - 语言数据对象，键为语言标识，值为该语言的数据对象（支持任意类型）
 - `options` - 可选配置项
-  - `default` - 默认语言键，如果未指定则使用第一个语言
+  - `default` - 默认语言键，如果未指定则使用 `langs` 中声明的第一个语言；如果传入了无效值，也会回退到第一个语言
   - `storageKey` - localStorage 存储键名，默认为 `'vue-localeflow'`
 
 #### 返回值
@@ -201,8 +201,8 @@ console.log(message) // 根据 lang.$.lang 返回对应语言的文本
     - `key` - 要设置的语言键
     - `persist` - 是否持久化到 localStorage，默认为 `true`
   - `t(options)` - 根据当前语言动态选择值
-    - `options` - 包含所有语言键对应值的对象
-    - 返回值 - 根据当前语言返回对应的值
+    - `options` - 包含语言键对应值的对象，允许只传部分语言
+    - 返回值 - 优先返回当前语言对应的值；如果缺失，则回退到 `default` 对应的值；如果仍然缺失，则按 `langs` 的声明顺序返回第一个可用值
 - `...langData` - 当前语言的所有数据属性（通过 Proxy 动态代理访问）
 
 ## 🔧 高级用法

@@ -138,7 +138,7 @@ Creates a language manager instance.
 
 - `langs` - Language data object where keys are language identifiers and values are data objects for that language
 - `options` - Optional configuration
-  - `default` - Default language key, uses the first language if not specified
+  - `default` - Default language key, uses the first language declared in `langs` if not specified; invalid values also fall back to that first language
   - `storageKey` - localStorage key name, defaults to `'vue-localeflow'`
 
 #### Returns
@@ -150,7 +150,8 @@ Returns a readonly reactive object with the following properties and methods:
   - `key` - Language key to set
   - `persist` - Whether to persist to localStorage, defaults to `true`
 - `x(options)` - Dynamically select value based on current language
-  - `options` - Object containing values for all language keys
+  - `options` - Object containing values for language keys, partial input is allowed
+  - Returns the current language value first; if missing, falls back to `default`; if still missing, returns the first available value in `langs` declaration order
 - `...langData` - All data properties of current language (via Proxy)
 
 ### Type Definitions

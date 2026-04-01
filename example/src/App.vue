@@ -50,6 +50,19 @@ const langs = [
         <p class="value">{{ lang.helloTo('Vue3') }}</p>
       </section>
 
+      <section class="block">
+        <h2 class="block__title">缺失语言回退</h2>
+        <p class="code-like">lang.$.t({ chs: '…', en: '…' })</p>
+        <p class="value">
+          {{
+            lang.$.t({
+              chs: '这个文案故意没有给 ja，切到日语时会回退到默认语言',
+              en: 'This message intentionally omits ja and falls back to the default language',
+            })
+          }}
+        </p>
+      </section>
+
       <section class="block span-2">
         <h2 class="block__title">临时多语言 (一次性映射)</h2>
         <p class="code-like">lang.$.x({ chs: '…', en: '…' })</p>
