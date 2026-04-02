@@ -1,6 +1,6 @@
 {
   "name": "vue-localeflow",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A lightweight, type-safe Vue 3 internationalization (i18n) solution with reactive language switching and localStorage support",
   "type": "module",
   "main": "dist/index.mjs",
