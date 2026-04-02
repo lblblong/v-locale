@@ -190,6 +190,8 @@ console.log(message) // 根据 lang.$.lang 返回对应语言的文本
 - `options` - 可选配置项
   - `default` - 默认语言键，如果未指定则使用 `langs` 中声明的第一个语言；如果传入了无效值，也会回退到第一个语言
   - `storageKey` - localStorage 存储键名，默认为 `'vue-localeflow'`
+  - `storage` - 自定义持久化适配器，适合接入 Cookie 或其他存储介质
+  - `resolveInitialLang` - 当没有持久化值时，用于决定初始语言的自定义函数
 
 #### 返回值
 
@@ -199,13 +201,82 @@ console.log(message) // 根据 lang.$.lang 返回对应语言的文本
   - `lang` - 当前激活的语言键（只读）
   - `set(key, persist?)` - 设置当前语言
     - `key` - 要设置的语言键
-    - `persist` - 是否持久化到 localStorage，默认为 `true`
+    - `persist` - 是否写入当前持久化适配器，默认为 `true`
   - `t(options)` - 根据当前语言动态选择值
     - `options` - 包含语言键对应值的对象，允许只传部分语言
     - 返回值 - 优先返回当前语言对应的值；如果缺失，则回退到 `default` 对应的值；如果仍然缺失，则按 `langs` 的声明顺序返回第一个可用值
 - `...langData` - 当前语言的所有数据属性（通过 Proxy 动态代理访问）
 
 ## 🔧 高级用法
+
+### Nuxt SSR 接入
+
+在 SPA 中无需额外配置，直接使用 `createLang()` 即可。
+
+如果在 Nuxt 中使用，为了让服务端请求内的语言状态隔离生效，建议在 Nuxt 插件中接入 `vue-localeflow/nuxt`：
+
+```typescript
+// plugins/lang.ts
+import { installNuxtLang } from 'vue-localeflow/nuxt'
+import { lang } from '~/lang'
+
+export default defineNuxtPlugin((nuxtApp) => {
+  const cookie = useCookie<'chs' | 'en'>('lang')
+
+  installNuxtLang(lang, nuxtApp.vueApp, {
+    useState,
+    storage: {
+      get: () => cookie.value,
+      set: (value) => {
+        cookie.value = value
+      },
+    },
+    resolveInitialLang: () => {
+      if (import.meta.server) {
+        const headers = useRequestHeaders(['accept-language'])
+        const acceptLanguage = headers['accept-language'] || ''
+
+        if (acceptLanguage.includes('zh')) return 'chs'
+        if (acceptLanguage.includes('en')) return 'en'
+        return undefined
+      }
+
+      return navigator.language.startsWith('zh') ? 'chs' : 'en'
+    },
+  })
+})
+```
+
+如果你只是在 SPA 中根据浏览器语言初始化，可以直接在 `createLang()` 中传入 `resolveInitialLang`：
+
+```typescript
+const lang = createLang(langData, {
+  default: 'en',
+  resolveInitialLang: () => {
+    if (navigator.language.startsWith('zh-CN')) return 'chs'
+    if (navigator.language.startsWith('en')) return 'en'
+    return undefined
+  },
+})
+```
+
+接入完成后，业务代码仍然可以继续全局导出并直接使用 `lang`：
+
+```typescript
+// 任意运行时调用链里都可以直接读取
+export function getPageTitle() {
+  return lang.title
+}
+```
+
+不建议在模块顶层缓存请求态语言值，例如：
+
+```typescript
+// 不推荐
+export const pageTitle = lang.title
+```
+
+这类顶层求值会在 SSR 中丢失当前请求上下文。
 
 ### TypeScript 类型安全
 

@@ -1,4 +1,12 @@
-import { readonly, ref } from 'vue'
+import {
+  hasInjectionContext,
+  inject,
+  readonly,
+  ref,
+  type App,
+  type InjectionKey,
+  type Ref,
+} from 'vue'
 import { isBrowser } from './utils/env'
 import { safeGetStorage, safeSetStorage } from './utils/localStorage'
 import { logger } from './utils/logger'
@@ -6,18 +14,46 @@ import { logger } from './utils/logger'
 /**
  * Options for creating a multi-language configuration
  */
-interface CreateLangOptions<Langs extends string = string> {
+export interface CreateLangOptions<Langs extends string = string> {
   /** localStorage key, defaults to 'vue-localeflow' */
   storageKey?: string
   /** Default language key, defaults to the first key of langs */
   default?: Langs
+  /** Custom persistence adapter */
+  storage?: LangStorage<Langs>
+  /** Resolve the initial language when no persisted value exists */
+  resolveInitialLang?: ResolveInitialLang<Langs>
 }
+
+export interface LangPluginOptions<Langs extends string = string> {
+  /** Initial language used when installing into an SSR app instance */
+  initialSSR?: Langs
+  /** Existing request-scoped ref provided by an adapter layer */
+  langRef?: Ref<Langs>
+  /** Persistence adapter used for this app instance */
+  storage?: LangStorage<Langs>
+}
+
+export interface LangStorage<Langs extends string = string> {
+  get: () => Langs | null | undefined
+  set: (value: Langs) => void
+}
+
+export interface ResolveInitialLangContext<Langs extends string> {
+  isBrowser: boolean
+  defaultLang: Langs
+  langKeys: readonly Langs[]
+}
+
+export type ResolveInitialLang<Langs extends string> = (
+  context: ResolveInitialLangContext<Langs>
+) => Langs | null | undefined
 
 /**
  * Language manager interface providing language switching and utility methods
  * @template Langs - Union type of language keys
  */
-interface Core<Langs extends string> {
+export interface Core<Langs extends string> {
   /** Current language key (read-only) */
   readonly lang: Langs
   /**
@@ -34,6 +70,24 @@ interface Core<Langs extends string> {
    */
   t: <V>(opts: Partial<Record<Langs, V>>) => V
 }
+
+interface LangInternalApi<Langs extends string> {
+  setExternalResolver: (resolver?: () => Ref<Langs> | undefined) => void
+  setExternalStorageResolver: (resolver?: () => LangStorage<Langs> | undefined) => void
+  resolveActiveLangRef: () => Ref<Langs>
+  normalizeLang: (value: Langs | null | undefined) => Langs
+}
+
+interface LangRuntimeContext<Langs extends string> {
+  langRef: Ref<Langs>
+  storage?: LangStorage<Langs>
+}
+
+export const LANG_INTERNAL_API = Symbol('vue-localeflow-internal-api')
+
+export type LangInstance<T extends object, L extends string> = Readonly<
+  { $: Core<L>; install: (app: App, options?: LangPluginOptions<L>) => void } & T
+>
 
 /**
  * Create a reactive multi-language manager
@@ -69,7 +123,7 @@ interface Core<Langs extends string> {
 export function createLang<T extends object, L extends string>(
   langs: Record<L, T>,
   options: CreateLangOptions<L> = {}
-) {
+): LangInstance<T, L> {
   // Validate langs is not empty
   if (!langs || typeof langs !== 'object') {
     throw new Error('[vue-localeflow] langs must be a non-empty object')
@@ -86,15 +140,18 @@ export function createLang<T extends object, L extends string>(
 
   const storageKey = options.storageKey || 'vue-localeflow'
 
-  const getInitialLang = (): L => {
-    if (isBrowser) {
-      const stored = safeGetStorage(storageKey) as L | null
-      if (stored && langKeysSet.has(stored)) {
-        return stored
+  const defaultStorage = isBrowser
+    ? {
+        get: () => safeGetStorage(storageKey) as L | null,
+        set: (value: L) => {
+          safeSetStorage(storageKey, String(value))
+        },
       }
-    }
+    : undefined
 
-    // Validate default language if provided
+  const baseStorage = options.storage || defaultStorage
+
+  const fallbackLang = (() => {
     if (options.default) {
       if (!langKeysSet.has(options.default as L)) {
         logger.warn(
@@ -106,13 +163,102 @@ export function createLang<T extends object, L extends string>(
     }
 
     return langKeys[0]
+  })()
+
+  const normalizeLang = (value: L | null | undefined, warn = true): L => {
+    if (value && langKeysSet.has(value)) {
+      return value
+    }
+
+    if (warn && value != null) {
+      logger.warn(`Invalid language key: ${String(value)}`)
+    }
+
+    return fallbackLang
+  }
+
+  const readStoredLang = (storage?: LangStorage<L>): L | undefined => {
+    if (!storage) {
+      return undefined
+    }
+
+    const stored = storage.get()
+    if (stored == null) {
+      return undefined
+    }
+
+    return normalizeLang(stored)
+  }
+
+  const getInitialLang = (): L => {
+    const storedLang = readStoredLang(baseStorage)
+    if (storedLang) {
+      return storedLang
+    }
+
+    const resolvedLang = options.resolveInitialLang?.({
+      isBrowser,
+      defaultLang: fallbackLang,
+      langKeys,
+    })
+
+    if (resolvedLang != null) {
+      return normalizeLang(resolvedLang)
+    }
+
+    return fallbackLang
   }
 
   const initialLang = getInitialLang()
-  const lang = ref(initialLang) as import('vue').Ref<L>
+  const globalLangRef = ref(initialLang) as Ref<L>
+  const langInjectionKey = Symbol('vue-localeflow-context') as InjectionKey<
+    LangRuntimeContext<L>
+  >
+
+  let externalResolver: (() => Ref<L> | undefined) | undefined
+  let externalStorageResolver: (() => LangStorage<L> | undefined) | undefined
+
+  const getInjectedContext = (): LangRuntimeContext<L> | undefined => {
+    if (!hasInjectionContext()) {
+      return undefined
+    }
+
+    return inject(langInjectionKey, undefined)
+  }
+
+  const getInjectedLangRef = (): Ref<L> | undefined => {
+    return getInjectedContext()?.langRef
+  }
+
+  const getActiveStorage = (): LangStorage<L> | undefined => {
+    return getInjectedContext()?.storage || externalStorageResolver?.() || baseStorage
+  }
+
+  const getExternalLangRef = (): Ref<L> | undefined => {
+    if (!externalResolver) {
+      return undefined
+    }
+
+    const resolved = externalResolver()
+    if (!resolved) {
+      return undefined
+    }
+
+    const normalized = normalizeLang(resolved.value)
+    if (resolved.value !== normalized) {
+      resolved.value = normalized
+    }
+
+    return resolved
+  }
+
+  const getActiveLangRef = (): Ref<L> => {
+    return getInjectedLangRef() || getExternalLangRef() || globalLangRef
+  }
 
   const resolveTranslation = <V>(opts: Partial<Record<L, V>>): V => {
-    const currentValue = opts[lang.value]
+    const activeLang = getActiveLangRef().value
+    const currentValue = opts[activeLang]
     if (currentValue !== undefined) {
       return currentValue
     }
@@ -134,19 +280,55 @@ export function createLang<T extends object, L extends string>(
     return undefined as V
   }
 
+  const internalApi: LangInternalApi<L> = {
+    setExternalResolver: (resolver) => {
+      externalResolver = resolver
+    },
+    setExternalStorageResolver: (resolver) => {
+      externalStorageResolver = resolver
+    },
+    resolveActiveLangRef: getActiveLangRef,
+    normalizeLang: (value) => normalizeLang(value, false),
+  }
+
+  const install = (app: App, pluginOptions: LangPluginOptions<L> = {}) => {
+    const requestLangRef = (pluginOptions.langRef ||
+      ref(normalizeLang(pluginOptions.initialSSR ?? globalLangRef.value, false))) as Ref<L>
+
+    requestLangRef.value = normalizeLang(
+      pluginOptions.initialSSR ?? requestLangRef.value ?? globalLangRef.value,
+      false
+    )
+
+    app.provide(langInjectionKey, {
+      langRef: requestLangRef,
+      storage: pluginOptions.storage || baseStorage,
+    })
+
+    if (isBrowser) {
+      globalLangRef.value = requestLangRef.value
+    }
+  }
+
   const $ = {
     get lang(): L {
-      return lang.value
+      return getActiveLangRef().value
     },
     set: (val: L, persist = true) => {
       if (!langKeysSet.has(val)) {
         logger.warn(`Invalid language key: ${String(val)}`)
         return
       }
-      lang.value = val
 
-      if (persist && isBrowser) {
-        safeSetStorage(storageKey, String(val))
+      const activeLangRef = getActiveLangRef()
+      activeLangRef.value = val
+
+      if (isBrowser) {
+        globalLangRef.value = val
+      }
+
+      if (persist) {
+        getActiveStorage()?.set(val)
       }
     },
     t: <V>(opts: Partial<Record<L, V>>): V => {
@@ -160,6 +342,8 @@ export function createLang<T extends object, L extends string>(
       {
         get(_, prop) {
           if (prop === '$') return $
+          if (prop === 'install') return install
+          if (prop === LANG_INTERNAL_API) return internalApi
 
           // Handle Vue 3 internal symbols and common built-in symbols
           if (typeof prop === 'symbol') {
@@ -169,7 +353,7 @@ export function createLang<T extends object, L extends string>(
             return undefined
           }
 
-          const currentData = langs[lang.value]
+          const currentData = langs[getActiveLangRef().value]
           if (currentData && Reflect.has(currentData, prop)) {
             return Reflect.get(currentData, prop)
           }
@@ -180,20 +364,22 @@ export function createLang<T extends object, L extends string>(
         // Support 'in' operator
         has(_, prop) {
           if (prop === '$') return true
+          if (prop === 'install') return true
+          if (prop === LANG_INTERNAL_API) return true
 
           if (typeof prop === 'symbol') return false
 
-          const currentData = langs[lang.value]
+          const currentData = langs[getActiveLangRef().value]
           return currentData ? Reflect.has(currentData, prop) : false
         },
 
         // Support Object.keys(), Object.entries(), etc.
         ownKeys(_) {
-          const currentData = langs[lang.value]
-          if (!currentData) return ['$']
+          const currentData = langs[getActiveLangRef().value]
+          if (!currentData) return ['$', 'install']
 
           const keys = Reflect.ownKeys(currentData)
-          return ['$', ...keys]
+          return ['$', 'install', ...keys]
         },
 
         // Required for ownKeys to work properly
@@ -206,7 +392,23 @@ export function createLang<T extends object, L extends string>(
             }
           }
 
-          const currentData = langs[lang.value]
+          if (prop === 'install') {
+            return {
+              configurable: true,
+              enumerable: true,
+              value: install,
+            }
+          }
+
+          if (prop === LANG_INTERNAL_API) {
+            return {
+              configurable: true,
+              enumerable: false,
+              value: internalApi,
+            }
+          }
+
+          const currentData = langs[getActiveLangRef().value]
           if (currentData && Reflect.has(currentData, prop)) {
             return Reflect.getOwnPropertyDescriptor(currentData, prop)
           }
@@ -215,6 +417,6 @@ export function createLang<T extends object, L extends string>(
         },
       }
     )
-  ) as Readonly<{ $: Core<L> } & T>
+  ) as LangInstance<T, L>
 }
 

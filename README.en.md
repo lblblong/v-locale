@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/bundlephobia/minzip/vue-localeflow" alt="Bundle Size">
 </p>
 
-A lightweight, type-safe Vue 3 internationalization (i18n) solution with reactive language switching and localStorage support.
+A lightweight, type-safe Vue 3 internationalization (i18n) solution with reactive language switching and pluggable persistence.
 
 English | [中文](README.md)
 
@@ -16,7 +16,7 @@ English | [中文](README.md)
 - 🚀 **Lightweight** - Only a few KB when compressed
 - 💪 **Type Safe** - Full TypeScript support
 - ⚡ **Reactive** - Built on Vue 3's reactive system
-- 💾 **Persistent** - Auto-save to localStorage
+- 💾 **Persistent** - Auto-save with localStorage by default, or use custom persistence
 - 🎯 **Simple** - Minimal API design
 - 🔧 **Zero Config** - Works out of the box with optional configuration
 
@@ -66,8 +66,8 @@ const lang = createLang(langData, {
 })
 
 // Use in your application
-console.log(lang.hello) // Outputs hello in current language
-console.log(lang.lang)  // Outputs current language key
+console.log(lang.hello)   // Outputs hello in current language
+console.log(lang.$.lang)  // Outputs current language key
 ```
 
 ### Use in Vue Components
@@ -81,8 +81,8 @@ console.log(lang.lang)  // Outputs current language key
       <button 
         v-for="key in ['en', 'zh', 'ja']" 
         :key="key"
-        @click="lang.set(key)"
-        :class="{ active: lang.lang === key }"
+        @click="lang.$.set(key)"
+        :class="{ active: lang.$.lang === key }"
       >
         {{ key }}
       </button>
@@ -105,7 +105,7 @@ const lang = createLang(langData, { default: 'en' })
 </script>
 ```
 
-### Using the `x` Function for Dynamic Selection
+### Using the `t` Function for Dynamic Selection
 
 ```typescript
 const lang = createLang({
@@ -114,14 +114,14 @@ const lang = createLang({
   ja: { name: '日本語' }
 })
 
-// Use x function to dynamically select values based on current language
-const buttonText = lang.x({
+// Use t function to dynamically select values based on current language
+const buttonText = lang.$.t({
   en: 'Click me',
   zh: '点击我',
   ja: 'クリックして'
 })
 
-const colors = lang.x({
+const colors = lang.$.t({
   en: 'red',
   zh: 'blue', 
   ja: 'green'
@@ -140,19 +140,18 @@ Creates a language manager instance.
 - `options` - Optional configuration
   - `default` - Default language key, uses the first language declared in `langs` if not specified; invalid values also fall back to that first language
   - `storageKey` - localStorage key name, defaults to `'vue-localeflow'`
+  - `storage` - Custom persistence adapter, useful for cookies or other storage backends
+  - `resolveInitialLang` - Custom function used to decide the initial language when nothing is persisted
 
 #### Returns
 
-Returns a readonly reactive object with the following properties and methods:
+Returns a readonly proxy object with the following properties and methods:
 
-- `lang` - Currently active language key (readonly)
-- `set(key, persist?)` - Set current language
-  - `key` - Language key to set
-  - `persist` - Whether to persist to localStorage, defaults to `true`
-- `x(options)` - Dynamically select value based on current language
-  - `options` - Object containing values for language keys, partial input is allowed
-  - Returns the current language value first; if missing, falls back to `default`; if still missing, returns the first available value in `langs` declaration order
-- `...langData` - All data properties of current language (via Proxy)
+- `$` - Language manager object
+  - `lang` - Currently active language key (readonly)
+  - `set(key, persist?)` - Set current language
+  - `t(options)` - Dynamically select a value based on the current language
+- `...langData` - All data properties of the current language (via Proxy)
 
 ### Type Definitions
 
@@ -160,16 +159,89 @@ Returns a readonly reactive object with the following properties and methods:
 interface CreateLangOptions<T> {
   storageKey?: string
   default?: T
+  storage?: {
+    get: () => T | null | undefined
+    set: (value: T) => void
+  }
+  resolveInitialLang?: () => T | null | undefined
 }
 
 interface Lang<Langs> {
   readonly lang: keyof Langs
   set: (val: keyof Langs, persist?: boolean) => void
-  x: <V>(opts: { [K in keyof Langs]: V }) => V
+  t: <V>(opts: Partial<Record<keyof Langs, V>>) => V
 }
 ```
 
 ## 🔧 Advanced Usage
+
+### Nuxt SSR Integration
+
+No extra configuration is needed for SPA usage.
+
+For Nuxt SSR, use the `vue-localeflow/nuxt` entry in a Nuxt plugin so each request gets its own language state:
+
+```typescript
+// plugins/lang.ts
+import { installNuxtLang } from 'vue-localeflow/nuxt'
+import { lang } from '~/lang'
+
+export default defineNuxtPlugin((nuxtApp) => {
+  const cookie = useCookie<'en' | 'zh'>('lang')
+
+  installNuxtLang(lang, nuxtApp.vueApp, {
+    useState,
+    storage: {
+      get: () => cookie.value,
+      set: (value) => {
+        cookie.value = value
+      },
+    },
+    resolveInitialLang: () => {
+      if (import.meta.server) {
+        const headers = useRequestHeaders(['accept-language'])
+        const acceptLanguage = headers['accept-language'] || ''
+
+        if (acceptLanguage.includes('zh')) return 'zh'
+        if (acceptLanguage.includes('en')) return 'en'
+        return undefined
+      }
+
+      return navigator.language.startsWith('zh') ? 'zh' : 'en'
+    },
+  })
+})
+```
+
+If you only need browser-language based initialization in an SPA, pass `resolveInitialLang` directly to `createLang()`:
+
+```typescript
+const lang = createLang(langData, {
+  default: 'en',
+  resolveInitialLang: () => {
+    if (navigator.language.startsWith('zh')) return 'zh'
+    if (navigator.language.startsWith('en')) return 'en'
+    return undefined
+  },
+})
+```
+
+After that, application code can keep using the globally exported `lang` object:
+
+```typescript
+export function getPageTitle() {
+  return lang.title
+}
+```
+
+Avoid caching request-scoped values at module top level during SSR:
+
+```typescript
+// Not recommended
+export const pageTitle = lang.title
+```
+
+That pattern evaluates too early and can escape the current request context.
 
 ### Complex Language Data Structure
 
@@ -215,8 +287,8 @@ console.log(lang.formats.date)    // 'MM/DD/YYYY' or 'YYYY年MM月DD日'
 ### Temporary Switch Without Persistence
 
 ```typescript
-// Temporarily switch language without saving to localStorage
-lang.set('zh', false)
+// Temporarily switch language without persisting it
+lang.$.set('zh', false)
 ```
 
 ### Custom Storage Key
@@ -294,9 +366,9 @@ import { lang } from '@/lang'
 export function useLang() {
   return {
     lang,
-    isEn: computed(() => lang.lang === 'en'),
-    isZh: computed(() => lang.lang === 'zh'),
-    switchLang: (key: string) => lang.set(key)
+    isEn: computed(() => lang.$.lang === 'en'),
+    isZh: computed(() => lang.$.lang === 'zh'),
+    switchLang: (key: string) => lang.$.set(key as 'en' | 'zh')
   }
 }
 ```
